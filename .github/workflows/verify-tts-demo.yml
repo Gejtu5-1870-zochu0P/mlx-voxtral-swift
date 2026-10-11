@@ -1,4 +1,3 @@
-```yaml
 name: Verify Voxtral TTS Demo
 
 on:
@@ -32,7 +31,7 @@ jobs:
       - name: Build TTS demo
         run: swift build --configuration release --product VoxtralTTSStreamingDemo
 
-      - name: Package macOS app
+      - name: Create macOS app bundle
         shell: bash
         run: |
           set -euo pipefail
@@ -40,14 +39,19 @@ jobs:
           BIN_PATH="$(swift build --configuration release --show-bin-path)"
           APP_DIR="$PWD/VoxtralTTSStreamingDemo.app"
 
+          test -f "$BIN_PATH/VoxtralTTSStreamingDemo"
+
           mkdir -p "$APP_DIR/Contents/MacOS"
           mkdir -p "$APP_DIR/Contents/Resources"
 
           cp "$BIN_PATH/VoxtralTTSStreamingDemo" \
             "$APP_DIR/Contents/MacOS/VoxtralTTSStreamingDemo"
 
-          find "$BIN_PATH" -maxdepth 1 -type d -name '*.bundle' \
-            -exec cp -R {} "$APP_DIR/Contents/Resources/" \;
+          for bundle in "$BIN_PATH"/*.bundle; do
+            if [[ -d "$bundle" ]]; then
+              cp -R "$bundle" "$APP_DIR/Contents/Resources/"
+            fi
+          done
 
           cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
@@ -79,4 +83,3 @@ jobs:
           path: VoxtralTTSStreamingDemo.app
           if-no-files-found: error
           retention-days: 7
-```
