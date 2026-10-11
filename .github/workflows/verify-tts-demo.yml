@@ -1,0 +1,33 @@
+
+name: Verify Voxtral TTS Demo
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Package.swift'
+      - 'Sources/**'
+      - '.github/workflows/verify-tts-demo.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Check toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build TTS demo
+        run: swift build --configuration release --product VoxtralTTSStreamingDemo
