@@ -1,4 +1,4 @@
-
+```yaml
 name: Verify Voxtral TTS Demo
 
 on:
@@ -31,3 +31,52 @@ jobs:
 
       - name: Build TTS demo
         run: swift build --configuration release --product VoxtralTTSStreamingDemo
+
+      - name: Package macOS app
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BIN_PATH="$(swift build --configuration release --show-bin-path)"
+          APP_DIR="$PWD/VoxtralTTSStreamingDemo.app"
+
+          mkdir -p "$APP_DIR/Contents/MacOS"
+          mkdir -p "$APP_DIR/Contents/Resources"
+
+          cp "$BIN_PATH/VoxtralTTSStreamingDemo" \
+            "$APP_DIR/Contents/MacOS/VoxtralTTSStreamingDemo"
+
+          find "$BIN_PATH" -maxdepth 1 -type d -name '*.bundle' \
+            -exec cp -R {} "$APP_DIR/Contents/Resources/" \;
+
+          cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>VoxtralTTSStreamingDemo</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.vincentgourbin.voxtral-tts-demo</string>
+              <key>CFBundleName</key>
+              <string>Voxtral TTS Demo</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>15.0</string>
+              <key>NSPrincipalClass</key>
+              <string>NSApplication</string>
+          </dict>
+          </plist>
+          PLIST
+
+          plutil -lint "$APP_DIR/Contents/Info.plist"
+
+      - name: Upload macOS app
+        uses: actions/upload-artifact@v4
+        with:
+          name: VoxtralTTSStreamingDemo-macOS
+          path: VoxtralTTSStreamingDemo.app
+          if-no-files-found: error
+          retention-days: 7
+```
