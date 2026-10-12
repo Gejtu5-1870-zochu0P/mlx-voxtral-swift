@@ -76,6 +76,23 @@ jobs:
 
           plutil -lint "$APP_DIR/Contents/Info.plist"
 
+      - name: Sign and verify macOS app
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          APP_DIR="$PWD/VoxtralTTSStreamingDemo.app"
+          EXECUTABLE="$APP_DIR/Contents/MacOS/VoxtralTTSStreamingDemo"
+
+          test -f "$EXECUTABLE"
+          test -f "$APP_DIR/Contents/Info.plist"
+
+          codesign --force --sign - --timestamp=none "$EXECUTABLE"
+          codesign --force --deep --sign - --timestamp=none "$APP_DIR"
+
+          codesign --verify --deep --strict --verbose=2 "$APP_DIR"
+          plutil -lint "$APP_DIR/Contents/Info.plist"
+
       - name: Upload macOS app
         uses: actions/upload-artifact@v4
         with:
